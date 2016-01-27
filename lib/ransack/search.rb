@@ -142,7 +142,7 @@ module Ransack
 
     def sanitized_ransackable_scope_args(args)
       if args.is_a?(Array)
-        args = args.map(&method(:sanitized_scope_args))
+        args = args.map(&method(:sanitized_ransackable_scope_args))
       end
       args
     end
