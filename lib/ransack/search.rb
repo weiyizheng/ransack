@@ -43,7 +43,7 @@ module Ransack
         elsif base.attribute_method?(key)
           base.send("#{key}=", value)
         elsif @context.ransackable_scope?(key, @context.object)
-          add_scope(key, value)
+          add_ransackable_scope(key, value)
         elsif !Ransack.options[:ignore_unknown_conditions]
           raise ArgumentError, "Invalid search term #{key}"
         end
@@ -122,6 +122,15 @@ module Ransack
 
     private
 
+    def add_ransackable_scope(key, args)
+      if @context.scope_arity(key) == 1
+        @scope_args[key] = args.is_a?(Array) ? args[0] : args
+      else
+        @scope_args[key] = args.is_a?(Array) ? sanitized_ransackable_scope_args(args) : args
+      end
+      @context.chain_scope(key, sanitized_ransackable_scope_args(args))
+    end
+
     def add_scope(key, args)
       if @context.scope_arity(key) == 1
         @scope_args[key] = args.is_a?(Array) ? args[0] : args
@@ -129,6 +138,13 @@ module Ransack
         @scope_args[key] = args.is_a?(Array) ? sanitized_scope_args(args) : args
       end
       @context.chain_scope(key, sanitized_scope_args(args))
+    end
+
+    def sanitized_ransackable_scope_args(args)
+      if args.is_a?(Array)
+        args = args.map(&method(:sanitized_scope_args))
+      end
+      args
     end
 
     def sanitized_scope_args(args)
